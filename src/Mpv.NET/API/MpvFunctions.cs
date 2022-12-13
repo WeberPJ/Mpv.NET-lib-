@@ -41,6 +41,9 @@ namespace Mpv.NET.API
 		// Not strictly part of the C API but are used to invoke mpv_get_property with value data type.
 		public MpvGetPropertyDouble GetPropertyDouble		{ get; private set; }
 		public MpvGetPropertyLong GetPropertyLong			{ get; private set; }
+		
+		public int MajorVersion { get; private set; }
+		public int MinorVersion { get; private set; }
 
 		private IntPtr dllHandle;
 
@@ -65,12 +68,16 @@ namespace Mpv.NET.API
 		private void LoadFunctions()
 		{
 			ClientAPIVersion		= LoadFunction<MpvClientAPIVersion>("mpv_client_api_version");
+			var version = ClientAPIVersion ();
+			MajorVersion = Convert.ToInt32 ((version & 0xffff0000) >> 16);
+			MinorVersion = Convert.ToInt32 (version & 0x0000ffff);
+			
 			ErrorString				= LoadFunction<MpvErrorString>("mpv_error_string");
 			Free					= LoadFunction<MpvFree>("mpv_free");
 			ClientName				= LoadFunction<MpvClientName>("mpv_client_name");
 			Create					= LoadFunction<MpvCreate>("mpv_create");
 			Initialise				= LoadFunction<MpvInitialise>("mpv_initialize");
-			DetachDestroy			= LoadFunction<MpvDetachDestroy>("mpv_detach_destroy");
+			DetachDestroy			= LoadFunction<MpvDetachDestroy>(MajorVersion == 2 ? "mpv_destroy" : "mpv_detach_destroy");
 			TerminateDestroy		= LoadFunction<MpvTerminateDestroy>("mpv_terminate_destroy");
 			CreateClient			= LoadFunction<MpvCreateClient>("mpv_create_client");
 			LoadConfigFile			= LoadFunction<MpvLoadConfigFile>("mpv_load_config_file");
